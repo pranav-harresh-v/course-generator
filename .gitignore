@@ -1,0 +1,37 @@
+# Global ignores
+.DS_Store
+.env
+.env.*.local
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Ignore Vite and frontend build artifacts
+client/node_modules/
+client/dist/
+client/.vite/
+client/.env
+
+# Ignore backend build and runtime files
+server/node_modules/
+server/dist/
+server/.env
+server/.cache/
+server/logs/
+server/dump/
+
+# IDEs and editor configs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS junk
+Thumbs.db
+Desktop.ini
+
+# Optional: Auth0 or other secret config
+auth0.config.json
