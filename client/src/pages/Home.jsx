@@ -1,10 +1,134 @@
-import { Box, Heading, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Heading, Text, HStack } from "@chakra-ui/react";
+import { motion } from "framer-motion";
+import { useAuth0 } from "@auth0/auth0-react";
+
+// Reusable motion wrapper
+const MotionBox = motion(Box);
+
+const FadeInUp = ({ delay = 0, children }) => (
+  <MotionBox
+    initial={{ opacity: 0, y: 30 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay, duration: 0.6 }}
+  >
+    {children}
+  </MotionBox>
+);
 
 export default function Home() {
+  const { loginWithRedirect } = useAuth0();
+
   return (
-    <Box p={6}>
-      <Heading mb={2}>Text-to-Learn</Heading>
-      <Text>Welcome to your AI-powered course generator 🚀</Text>
+    <Box
+      minH="100vh"
+      bgGradient="linear(to-b, #101be8ff, #3b0a56)"
+      px={{ base: 4, md: 8 }}
+      py={{ base: 6, md: 8 }}
+    >
+      {/* Navbar */}
+      <Flex
+        as="nav"
+        align="center"
+        justify="space-between"
+        mb={{ base: 12, md: 16 }}
+        color="white"
+      >
+        <Text fontWeight="bold" fontSize="xl">
+          Course
+          <Box as="span" color="purple.300">
+            Generator
+          </Box>
+        </Text>
+
+        <HStack spacing={4}>
+          <Button
+            variant="ghost"
+            color="white"
+            onClick={() => loginWithRedirect()}
+          >
+            Log In
+          </Button>
+          <Button
+            colorScheme="green"
+            size="sm"
+            rightIcon={<Box as="span">→</Box>}
+            onClick={() =>
+              loginWithRedirect({
+                authorizationParams: {
+                  screen_hint: "signup",
+                },
+              })
+            }
+          >
+            Sign Up Free
+          </Button>
+        </HStack>
+      </Flex>
+
+      {/* Hero Section */}
+      <Flex
+        direction="column"
+        align="center"
+        justify="center"
+        textAlign="center"
+        color="white"
+        px={4}
+        py={{ base: 16, md: 20 }}
+      >
+        <FadeInUp>
+          <Heading fontSize={{ base: "4xl", md: "5xl" }} fontWeight="extrabold">
+            Master Any Topic
+          </Heading>
+        </FadeInUp>
+
+        <FadeInUp delay={0.2}>
+          <Text mt={4} fontSize="lg" color="green.300" fontWeight="semibold">
+            Choose to learn smart, not hard.
+          </Text>
+        </FadeInUp>
+
+        <FadeInUp delay={0.4}>
+          <Text
+            mt={4}
+            maxW={{ base: "90%", md: "lg" }}
+            fontSize="md"
+            color="gray.200"
+          >
+            Unlock AI-powered learning. Choose a topic and get custom lessons,
+            code examples, quizzes, and revision — instantly. Fast. Free. Smart.
+          </Text>
+        </FadeInUp>
+
+        <FadeInUp delay={0.6}>
+          <HStack mt={8} spacing={4}>
+            <Button
+              bg="white"
+              color="black"
+              _hover={{ bg: "gray.200" }}
+              size="lg"
+              onClick={() =>
+                loginWithRedirect({
+                  authorizationParams: {
+                    screen_hint: "signup",
+                  },
+                })
+              }
+            >
+              Get Started Free
+            </Button>
+            <Button
+              variant="outline"
+              borderColor="white"
+              color="white"
+              _hover={{ bg: "whiteAlpha.100" }}
+              size="lg"
+              onClick={() => loginWithRedirect()}
+            >
+              Log In
+            </Button>
+          </HStack>
+        </FadeInUp>
+      </Flex>
     </Box>
   );
 }
