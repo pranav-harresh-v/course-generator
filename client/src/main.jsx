@@ -13,7 +13,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         clientId="vXLBA8aqnYmLBYWO0fns43VRmGrko3Im"
         authorizationParams={{
           redirect_uri: window.location.origin,
-          //audience: audience,
+          audience: "https://dev-ea27dazhpocuo306.us.auth0.com/api/v2/",
         }}
         cacheLocation="localstorage"
       >
