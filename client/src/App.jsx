@@ -1,29 +1,35 @@
-import { Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
 
-import LessonRenderer from "./components/LessonRenderer";
-
-const sampleContent = [
-  { type: "heading", text: "Introduction to AI" },
-  { type: "paragraph", text: "AI is a rapidly evolving field..." },
-  { type: "code", language: "python", text: "print('Hello, AI!')" },
-  { type: "video", url: "dQw4w9WgXcQ" },
-  {
-    type: "mcq",
-    question: "What is AI?",
-    options: [
-      "A type of robot",
-      "A field of computer science",
-      "A programming language",
-    ],
-    answer: 1,
-  },
-];
+import LandingPage from "./pages/LandingPage";
+import Dashboard from "./pages/Dashboard";
+import LessonView from "./pages/LessonView";
+import AppLayout from "./layouts/AppLayout";
 
 export default function App() {
+  const { isAuthenticated, isLoading } = useAuth0();
+
+  if (isLoading) return <div>Loading...</div>; // or use LoadingSpinner
+
   return (
     <Routes>
-      <Route path="/" element={<LessonRenderer content={sampleContent} />} />
+      {!isAuthenticated ? (
+        <Route path="*" element={<LandingPage />} />
+      ) : (
+        <>
+          {/* Wrap dashboard and lessons inside layout */}
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<Dashboard />} />
+            <Route
+              path="/courses/:courseId/module/:moduleIndex/lesson/:lessonIndex"
+              element={<LessonView />}
+            />
+          </Route>
+
+          {/* Fallback to dashboard */}
+          <Route path="*" element={<Navigate to="/" />} />
+        </>
+      )}
     </Routes>
   );
 }
