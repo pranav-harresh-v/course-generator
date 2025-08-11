@@ -2,10 +2,26 @@ const mongoose = require("mongoose");
 
 const lessonSchema = new mongoose.Schema(
   {
-    title: { type: String, required: true },
-    content: { type: [mongoose.Schema.Types.Mixed], required: true },
-    isEnriched: { type: Boolean, default: false },
-    module: { type: mongoose.Schema.Types.ObjectId, ref: "Module" },
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    content: {
+      type: [mongoose.Schema.Types.Mixed], // Flexible structured blocks
+      required: true,
+    },
+    objectives: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    module: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Module",
+      required: true,
+    },
   },
   { timestamps: true }
 );

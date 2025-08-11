@@ -1,20 +1,45 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-require("dotenv").config();
+const helmet = require("helmet");
+const morgan = require("morgan");
 
 const connectDB = require("./config/db");
+const errorMiddleware = require("./middlewares/errorMiddleware");
+
+// Routes
+const courseRoutes = require("./routes/courseRoutes");
+
 const app = express();
 
+// Middleware
+app.use(helmet());
 app.use(cors());
+app.use(morgan("dev"));
 app.use(express.json());
 
-// Example route
-app.get("/", (req, res) => res.send("API is live"));
+// Root route
+app.get("/", (req, res) => {
+  res.json({ message: "Text-to-Learn Backend is running" });
+});
 
-const PORT = process.env.PORT;
+// API routes
+app.use("/api/courses", courseRoutes);
 
+// Error handler
+app.use(errorMiddleware);
+
+// Connect to DB and start server
+const PORT = process.env.PORT || 5000;
 connectDB()
   .then(() => {
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    app.listen(PORT, () => {
+      if (process.env.NODE_ENV !== "production") {
+        console.log(`Server running on port ${PORT}`);
+      }
+    });
   })
-  .catch((err) => console.error("MongoDB connection error:", err));
+  .catch((err) => {
+    console.error(err.message);
+    process.exit(1);
+  });
