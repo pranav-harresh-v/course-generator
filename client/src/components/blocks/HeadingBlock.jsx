@@ -1,9 +1,17 @@
 import { Heading } from "@chakra-ui/react";
 
-const HeadingBlock = ({ text }) => (
-  <Heading size="lg" color="gray.800">
-    {text}
-  </Heading>
-);
-
-export default HeadingBlock;
+export default function HeadingBlock({ text }) {
+  return (
+    <Heading
+      size="lg"
+      mt={6}
+      mb={3}
+      color="purple.300"
+      borderBottom="1px solid"
+      borderColor="gray.700"
+      pb={1}
+    >
+      {text}
+    </Heading>
+  );
+}

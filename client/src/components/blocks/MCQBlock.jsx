@@ -1,58 +1,86 @@
-import { Box, Text, VStack } from "@chakra-ui/react";
 import { useState } from "react";
+import { Box, Text, VStack, Button } from "@chakra-ui/react";
 
-const MCQBlock = ({ question, options, answer }) => {
+export default function MCQBlock({ question, options, answer }) {
   const [selected, setSelected] = useState(null);
-  const [showResult, setShowResult] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const handleSelect = (index) => {
-    setSelected(index);
-    setShowResult(true);
+    if (!submitted) setSelected(index);
+  };
+
+  const handleSubmit = () => {
+    if (selected !== null) setSubmitted(true);
   };
 
   return (
-    <Box p={4} borderWidth={1} borderRadius="md" bg="gray.50">
-      <Text fontWeight="semibold">{question}</Text>
-      <VStack spacing={2} mt={2} align="stretch">
-        {options.map((opt, i) => (
-          <Box
-            key={i}
-            p={2}
-            cursor="pointer"
-            borderWidth={1}
-            borderRadius="md"
-            onClick={() => handleSelect(i)}
-            bg={
-              showResult
-                ? i === answer
-                  ? "green.100"
-                  : i === selected
-                  ? "red.100"
-                  : "white"
-                : "white"
-            }
-            borderColor={
-              showResult
-                ? i === answer
-                  ? "green.500"
-                  : i === selected
-                  ? "red.500"
+    <Box
+      p={4}
+      border="1px solid"
+      borderColor="gray.700"
+      bg="gray.800"
+      rounded="md"
+      my={4}
+    >
+      <Text fontWeight="bold" mb={3} color="purple.300">
+        {question}
+      </Text>
+      <VStack align="stretch" spacing={2}>
+        {options.map((opt, i) => {
+          const isCorrect = i === answer;
+          const isSelected = i === selected;
+
+          return (
+            <Box
+              key={i}
+              p={2}
+              borderRadius="md"
+              border="1px solid"
+              borderColor={
+                submitted && isCorrect
+                  ? "green.400"
+                  : isSelected
+                  ? "purple.400"
+                  : "gray.600"
+              }
+              bg={
+                submitted && isCorrect
+                  ? "green.900"
+                  : isSelected
+                  ? "purple.900"
+                  : "transparent"
+              }
+              color={
+                submitted && isCorrect
+                  ? "green.200"
+                  : isSelected
+                  ? "purple.200"
                   : "gray.200"
-                : "gray.200"
-            }
-            _hover={!showResult ? { bg: "gray.100" } : {}}
-          >
-            {opt}
-          </Box>
-        ))}
+              }
+              _hover={{ bg: submitted ? "" : "gray.700", cursor: "pointer" }}
+              onClick={() => handleSelect(i)}
+            >
+              {opt}
+            </Box>
+          );
+        })}
       </VStack>
-      {showResult && selected !== null && (
-        <Text mt={2} fontSize="sm" color="gray.600">
-          {selected === answer ? "✅ Correct!" : "❌ Incorrect."}
+      {!submitted && (
+        <Button
+          mt={3}
+          size="sm"
+          colorScheme="purple"
+          isDisabled={selected === null}
+          onClick={handleSubmit}
+        >
+          Submit
+        </Button>
+      )}
+      {submitted && (
+        <Text mt={2} color={selected === answer ? "green.300" : "red.300"}>
+          {selected === answer ? "Correct! 🎉" : "Incorrect. Try again!"}
         </Text>
       )}
     </Box>
   );
-};
-
-export default MCQBlock;
+}

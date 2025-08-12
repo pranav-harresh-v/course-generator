@@ -1,9 +1,9 @@
 import { Text } from "@chakra-ui/react";
 
-const ParagraphBlock = ({ text }) => (
-  <Text fontSize="md" color="gray.700" lineHeight="tall">
-    {text}
-  </Text>
-);
-
-export default ParagraphBlock;
+export default function ParagraphBlock({ text }) {
+  return (
+    <Text fontSize="md" mb={4} lineHeight="tall" color="gray.200">
+      {text}
+    </Text>
+  );
+}

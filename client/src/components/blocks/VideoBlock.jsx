@@ -1,18 +1,25 @@
 import { Box, Text } from "@chakra-ui/react";
+import ReactPlayer from "react-player";
 
-const VideoBlock = ({ query }) => (
-  <Box
-    bg="black"
-    color="white"
-    p={4}
-    borderRadius="md"
-    display="flex"
-    justifyContent="center"
-    alignItems="center"
-    height="250px"
-  >
-    <Text fontSize="md">🎬 Placeholder for: {query}</Text>
-  </Box>
-);
+export default function VideoBlock({ url, query }) {
+  // If query is given but no url, could build a YouTube search in the future
+  const videoUrl =
+    url ||
+    `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
 
-export default VideoBlock;
+  return (
+    <Box my={6}>
+      <Text mb={2} fontWeight="semibold" color="purple.300">
+        Video Resource
+      </Text>
+      <Box
+        borderRadius="md"
+        overflow="hidden"
+        border="1px solid"
+        borderColor="gray.700"
+      >
+        <ReactPlayer url={videoUrl} controls width="100%" height="360px" />
+      </Box>
+    </Box>
+  );
+}
