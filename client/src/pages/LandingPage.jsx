@@ -44,7 +44,11 @@ export default function LandingPage() {
           <Button
             variant="ghost"
             color="white"
-            onClick={() => loginWithRedirect()}
+            onClick={() =>
+              loginWithRedirect({
+                appState: { returnTo: "/" },
+              })
+            }
           >
             Log In
           </Button>
@@ -56,6 +60,7 @@ export default function LandingPage() {
               loginWithRedirect({
                 authorizationParams: {
                   screen_hint: "signup",
+                  appState: { returnTo: "/" },
                 },
               })
             }
@@ -110,6 +115,7 @@ export default function LandingPage() {
                 loginWithRedirect({
                   authorizationParams: {
                     screen_hint: "signup",
+                    appState: { returnTo: "/" },
                   },
                 })
               }
@@ -122,7 +128,7 @@ export default function LandingPage() {
               color="white"
               _hover={{ bg: "whiteAlpha.100" }}
               size="lg"
-              onClick={() => loginWithRedirect()}
+              onClick={() => loginWithRedirect({ appState: { returnTo: "/" } })}
             >
               Log In
             </Button>

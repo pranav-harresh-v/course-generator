@@ -1,35 +1,39 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 
 import LandingPage from "./pages/LandingPage";
-import Dashboard from "./pages/Dashboard";
-import LessonView from "./pages/LessonView";
-import AppLayout from "./layouts/AppLayout";
+import DashboardPage from "./pages/DashboardPage";
+import ProtectedRoute from "./components/ProtectedRoute";
+import CourseLayout from "./pages/CourseLayout";
+import LessonViewer from "./pages/LessonViewer";
 
 export default function App() {
   const { isAuthenticated, isLoading } = useAuth0();
 
-  if (isLoading) return <div>Loading...</div>; // or use LoadingSpinner
+  if (isLoading) return <div>Loading...</div>;
 
   return (
     <Routes>
-      {!isAuthenticated ? (
-        <Route path="*" element={<LandingPage />} />
-      ) : (
-        <>
-          {/* Wrap dashboard and lessons inside layout */}
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route
-              path="/courses/:courseId/module/:moduleIndex/lesson/:lessonIndex"
-              element={<LessonView />}
-            />
-          </Route>
+      {/* Root route changes based on login state */}
+      <Route
+        path="/"
+        element={isAuthenticated ? <DashboardPage /> : <LandingPage />}
+      />
 
-          {/* Fallback to dashboard */}
-          <Route path="*" element={<Navigate to="/" />} />
-        </>
-      )}
+      {/* Protected course routes */}
+      <Route
+        path="/courses/:courseId"
+        element={
+          <ProtectedRoute>
+            <CourseLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route
+          path="module/:moduleIndex/lesson/:lessonIndex"
+          element={<LessonViewer />}
+        />
+      </Route>
     </Routes>
   );
 }
