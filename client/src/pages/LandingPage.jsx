@@ -2,7 +2,7 @@ import { Box, Button, Flex, Heading, Text, HStack } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import { useAuth0 } from "@auth0/auth0-react";
 
-// Reusable motion wrapper
+// Motion wrapper
 const MotionBox = motion(Box);
 
 const FadeInUp = ({ delay = 0, children }) => (
@@ -18,10 +18,21 @@ const FadeInUp = ({ delay = 0, children }) => (
 export default function LandingPage() {
   const { loginWithRedirect } = useAuth0();
 
+  const handleLogin = () =>
+    loginWithRedirect({
+      appState: { returnTo: "/" },
+    });
+
+  const handleSignup = () =>
+    loginWithRedirect({
+      authorizationParams: { screen_hint: "signup" },
+      appState: { returnTo: "/" },
+    });
+
   return (
     <Box
       minH="100vh"
-      bgGradient="linear(to-b, #101be8ff, #3b0a56)"
+      bgGradient="linear(to-b, blue.900, purple.900)"
       px={{ base: 4, md: 8 }}
       py={{ base: 6, md: 8 }}
     >
@@ -41,29 +52,14 @@ export default function LandingPage() {
         </Text>
 
         <HStack spacing={4}>
-          <Button
-            variant="ghost"
-            color="white"
-            onClick={() =>
-              loginWithRedirect({
-                appState: { returnTo: "/" },
-              })
-            }
-          >
+          <Button variant="ghost" color="white" onClick={handleLogin}>
             Log In
           </Button>
           <Button
             colorScheme="green"
             size="sm"
             rightIcon={<Box as="span">→</Box>}
-            onClick={() =>
-              loginWithRedirect({
-                authorizationParams: {
-                  screen_hint: "signup",
-                  appState: { returnTo: "/" },
-                },
-              })
-            }
+            onClick={handleSignup}
           >
             Sign Up Free
           </Button>
@@ -111,14 +107,7 @@ export default function LandingPage() {
               color="black"
               _hover={{ bg: "gray.200" }}
               size="lg"
-              onClick={() =>
-                loginWithRedirect({
-                  authorizationParams: {
-                    screen_hint: "signup",
-                    appState: { returnTo: "/" },
-                  },
-                })
-              }
+              onClick={handleSignup}
             >
               Get Started Free
             </Button>
@@ -128,7 +117,7 @@ export default function LandingPage() {
               color="white"
               _hover={{ bg: "whiteAlpha.100" }}
               size="lg"
-              onClick={() => loginWithRedirect({ appState: { returnTo: "/" } })}
+              onClick={handleLogin}
             >
               Log In
             </Button>

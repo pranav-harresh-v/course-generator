@@ -1,220 +1,241 @@
-import { useState, useEffect } from "react";
-import { useAuth0 } from "@auth0/auth0-react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Box,
-  Button,
-  Input,
   Heading,
   SimpleGrid,
   Text,
-  VStack,
   Spinner,
   useToast,
   Flex,
-  Avatar,
   IconButton,
+  useColorModeValue,
+  Input,
+  Skeleton,
 } from "@chakra-ui/react";
-import { DeleteIcon } from "@chakra-ui/icons";
+import { ArrowUpIcon, DeleteIcon } from "@chakra-ui/icons";
+import { useAuth0 } from "@auth0/auth0-react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import TopBar from "../components/TopBar";
+import {
+  getCourses,
+  createCourse as apiCreateCourse,
+  deleteCourse as apiDeleteCourse,
+} from "../utils/api";
 
+const MotionBox = motion(Box);
+
+/* ---------------- Course Card ---------------- */
+function CourseCard({ course, onDelete, onClick }) {
+  const cardBg = useColorModeValue("white", "gray.800");
+
+  return (
+    <MotionBox
+      p={{ base: 3, md: 5 }}
+      borderWidth="1px"
+      borderRadius="lg"
+      boxShadow="sm"
+      bg={cardBg}
+      position="relative"
+      cursor="pointer"
+      minH="150px"
+      whileHover={{ scale: 1.02, y: -2 }}
+      transition={{ duration: 0.15 }}
+      onClick={onClick}
+    >
+      <IconButton
+        size="sm"
+        icon={<DeleteIcon />}
+        variant="ghost"
+        colorScheme="red"
+        aria-label="Delete course"
+        position="absolute"
+        top={2}
+        right={2}
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete(course._id);
+        }}
+      />
+      <Heading size="md" noOfLines={1}>
+        {course.title}
+      </Heading>
+      <Text mt={2} fontSize="sm" color="gray.500" noOfLines={3}>
+        {course.description || "No description provided"}
+      </Text>
+    </MotionBox>
+  );
+}
+
+/* ---------------- Dashboard ---------------- */
 export default function DashboardPage() {
-  const { getAccessTokenSilently, user, logout } = useAuth0();
-  const [courses, setCourses] = useState([]);
-  const [prompt, setPrompt] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
+  const { getAccessTokenSilently } = useAuth0();
   const navigate = useNavigate();
   const toast = useToast();
 
-  const API_URL = "http://localhost:5000";
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [prompt, setPrompt] = useState("");
+
+  // Colors for the GPT-style bar
+  const barBg = useColorModeValue("gray.50", "gray.800");
+  const barBorder = useColorModeValue("gray.200", "gray.600");
+  const iconBg = useColorModeValue("white", "gray.700");
+  const iconHover = useColorModeValue("gray.100", "gray.600");
 
   // Fetch courses
-  const fetchCourses = async () => {
-    try {
-      const token = await getAccessTokenSilently();
-      const res = await axios.get(`${API_URL}/api/courses`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setCourses(res.data.data);
-    } catch (err) {
-      console.error(err);
-      toast({
-        title: "Error loading courses",
-        description: err.message,
-        status: "error",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchCourses();
-  }, []);
+    (async () => {
+      try {
+        setLoading(true);
+        const list = await getCourses(getAccessTokenSilently);
+        setCourses(list);
+      } catch (err) {
+        toast({
+          title: "Error loading courses",
+          description: err?.response?.data?.message || err.message,
+          status: "error",
+        });
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [getAccessTokenSilently, toast]);
 
-  // Create course
-  const handleCreateCourse = async () => {
-    if (!prompt.trim()) return;
-    try {
-      setCreating(true);
-      const token = await getAccessTokenSilently();
-      const res = await axios.post(
-        `${API_URL}/api/courses`,
-        { prompt },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast({ title: "Course created!", status: "success" });
-      setPrompt("");
-      // Instead of navigating immediately, add it to the list
-      setCourses((prev) => [res.data.data, ...prev]);
-    } catch (err) {
-      console.error(err);
-      toast({
-        title: "Error creating course",
-        description: err.message,
-        status: "error",
-      });
-    } finally {
-      setCreating(false);
-    }
-  };
+  const handleCreate = useCallback(
+    async (e) => {
+      e?.preventDefault?.();
+      const trimmed = prompt.trim();
+      if (!trimmed) {
+        toast({ title: "Title required", status: "warning" });
+        return;
+      }
+      try {
+        setCreating(true);
+        const created = await apiCreateCourse(getAccessTokenSilently, trimmed);
+        if (created) {
+          setCourses((prev) => [...prev, created]);
+          setPrompt("");
+          toast({ title: "Course created", status: "success" });
+          navigate(`/courses/${created._id}`);
+        }
+      } catch (err) {
+        toast({
+          title: "Error creating course",
+          description: err?.response?.data?.message || err.message,
+          status: "error",
+        });
+      } finally {
+        setCreating(false);
+      }
+    },
+    [prompt, getAccessTokenSilently, navigate, toast]
+  );
 
-  // Delete course
-  const handleDeleteCourse = async (id) => {
-    try {
-      const token = await getAccessTokenSilently();
-      await axios.delete(`${API_URL}/api/courses/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setCourses((prev) => prev.filter((c) => c._id !== id));
-      toast({ title: "Course deleted", status: "info" });
-    } catch (err) {
-      console.error(err);
-      toast({
-        title: "Error deleting course",
-        description: err.message,
-        status: "error",
-      });
-    }
-  };
-
-  if (loading) {
-    return (
-      <VStack py={20}>
-        <Spinner size="xl" />
-        <Text>Loading your courses...</Text>
-      </VStack>
-    );
-  }
+  const handleDelete = useCallback(
+    async (id) => {
+      try {
+        await apiDeleteCourse(getAccessTokenSilently, id);
+        setCourses((prev) => prev.filter((c) => c._id !== id));
+        toast({ title: "Course deleted", status: "info" });
+      } catch (err) {
+        toast({
+          title: "Error deleting course",
+          description: err?.response?.data?.message || err.message,
+          status: "error",
+        });
+      }
+    },
+    [getAccessTokenSilently, toast]
+  );
 
   return (
-    <Box minH="100vh" bg="gray.50">
-      {/* Top Nav */}
-      <Flex
-        bgGradient="linear(to-r, blue.600, purple.600)"
-        color="white"
-        px={6}
-        py={4}
-        align="center"
-        justify="space-between"
-        shadow="md"
-      >
-        <Heading size="md" fontWeight="bold">
-          CourseGenerator
-        </Heading>
-        <Flex align="center" gap={3}>
-          <Text fontSize="sm">{user?.name}</Text>
-          <Avatar size="sm" name={user?.name} src={user?.picture} />
-          <Button
-            size="sm"
-            variant="outline"
-            color="white"
-            borderColor="whiteAlpha.400"
-            _hover={{ bg: "whiteAlpha.200" }}
-            onClick={() => logout({ returnTo: window.location.origin })}
-          >
-            Logout
-          </Button>
-        </Flex>
-      </Flex>
+    <>
+      <TopBar />
 
-      {/* Main content */}
-      <Box maxW="6xl" mx="auto" px={6} py={8}>
-        {/* Create course */}
-        <Box bg="white" p={6} rounded="lg" shadow="sm" mb={10}>
-          <Heading size="md" mb={4}>
-            Create a New Course
-          </Heading>
-          <VStack spacing={3} align="stretch">
+      <Box p={{ base: 4, md: 8 }}>
+        {/* GPT-style create bar */}
+        <form onSubmit={handleCreate}>
+          <Box
+            mx="auto"
+            maxW="720px"
+            w="100%"
+            bg={barBg}
+            border="1px solid"
+            borderColor={barBorder}
+            borderRadius="full"
+            boxShadow="md"
+            px={{ base: 4, md: 6 }}
+            py={{ base: 2, md: 3 }}
+            position="relative"
+            mb={8}
+          >
             <Input
-              placeholder="Enter a topic (e.g., Introduction to Machine Learning)"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              bg="gray.50"
+              placeholder="Create any course..."
+              aria-label="Course creation input"
+              variant="unstyled"
+              pr={{ base: 12, md: 16 }}
+              fontSize={{ base: "md", md: "lg" }}
+              disabled={creating}
             />
-            <Button
-              colorScheme="purple"
-              size="lg"
-              onClick={handleCreateCourse}
-              isLoading={creating}
-            >
-              Generate Course
-            </Button>
-            <Text fontSize="sm" color="gray.500">
-              AI will generate a complete course outline and lessons for your
-              topic.
-            </Text>
-          </VStack>
-        </Box>
 
-        {/* Courses list */}
-        <Heading size="md" mb={4}>
-          My Courses
-        </Heading>
-        {courses.length === 0 ? (
-          <Text color="gray.500">
-            You don’t have any courses yet — create one above!
-          </Text>
-        ) : (
+            <IconButton
+              type="submit"
+              aria-label="Create course"
+              icon={
+                creating ? <Spinner size="sm" /> : <ArrowUpIcon boxSize={4} />
+              }
+              isDisabled={creating}
+              size="sm"
+              position="absolute"
+              right={{ base: 3, md: 4 }}
+              bottom={{ base: 2, md: 3 }}
+              borderRadius="full"
+              bg={iconBg}
+              _hover={{ bg: iconHover }}
+              boxShadow="sm"
+            />
+          </Box>
+        </form>
+
+        {/* Loading skeleton */}
+        {loading && (
+          <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={6}>
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} height="150px" borderRadius="lg" />
+            ))}
+          </SimpleGrid>
+        )}
+
+        {/* Empty state */}
+        {!loading && courses.length === 0 && (
+          <Flex direction="column" align="center" justify="center" mt={20}>
+            <Heading size="md" mb={2}>
+              No courses yet
+            </Heading>
+            <Text fontSize="sm" color="gray.500">
+              Start your learning journey by creating your first course.
+            </Text>
+          </Flex>
+        )}
+
+        {/* Courses grid */}
+        {!loading && courses.length > 0 && (
           <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={6}>
             {courses.map((course) => (
-              <Box
+              <CourseCard
                 key={course._id}
-                bg="white"
-                p={5}
-                rounded="lg"
-                shadow="sm"
-                position="relative"
-                cursor="pointer"
-                _hover={{ shadow: "md", transform: "translateY(-2px)" }}
-                transition="all 0.2s"
+                course={course}
+                onDelete={handleDelete}
                 onClick={() => navigate(`/courses/${course._id}`)}
-              >
-                <IconButton
-                  icon={<DeleteIcon />}
-                  size="sm"
-                  colorScheme="red"
-                  position="absolute"
-                  top={2}
-                  right={2}
-                  variant="ghost"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteCourse(course._id);
-                  }}
-                />
-                <Heading size="sm" mb={2}>
-                  {course.title}
-                </Heading>
-                <Text fontSize="sm" color="gray.600" noOfLines={3}>
-                  {course.description}
-                </Text>
-              </Box>
+              />
             ))}
           </SimpleGrid>
         )}
       </Box>
-    </Box>
+    </>
   );
 }

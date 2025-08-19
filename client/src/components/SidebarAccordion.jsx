@@ -1,3 +1,4 @@
+import React, { useMemo } from "react";
 import {
   Accordion,
   AccordionItem,
@@ -6,101 +7,95 @@ import {
   AccordionIcon,
   Box,
   VStack,
-  Text,
+  Button,
+  useColorModeValue,
 } from "@chakra-ui/react";
-import { useNavigate, useParams } from "react-router-dom";
-import { useState, useEffect } from "react";
-import axios from "axios";
-import { useAuth0 } from "@auth0/auth0-react";
+import { useParams, useNavigate } from "react-router-dom";
 
-export default function SidebarAccordion() {
-  const { courseId, moduleIndex, lessonIndex } = useParams();
-  const { getAccessTokenSilently } = useAuth0();
+export default function SidebarAccordion({ modules = [] }) {
+  const {
+    courseId,
+    moduleIndex: activeModuleIndex,
+    lessonIndex: activeLessonIndex,
+  } = useParams();
   const navigate = useNavigate();
 
-  const [modules, setModules] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const API_URL = import.meta.env.VITE_API_URL;
+  // Color tokens
+  const sidebarBg = useColorModeValue("white", "gray.800");
+  const hoverBg = useColorModeValue("gray.100", "gray.700");
+  const activeBg = useColorModeValue("purple.50", "purple.600");
+  const activeColor = useColorModeValue("purple.700", "white");
+  const moduleTitleColor = useColorModeValue("gray.800", "gray.200");
+  const lessonTextColor = useColorModeValue("gray.700", "gray.300");
+  const emptyTextColor = useColorModeValue("gray.500", "gray.400");
 
-  useEffect(() => {
-    const fetchModules = async () => {
-      try {
-        const token = await getAccessTokenSilently();
-        const res = await axios.get(`${API_URL}/api/courses/${courseId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setModules(res.data.data.modules || []);
-      } catch (err) {
-        console.error("Error fetching modules:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Auto-expand the active module
+  const defaultIndex = useMemo(() => {
+    if (!modules.length) return [];
+    const index = parseInt(activeModuleIndex, 10);
+    return isNaN(index) ? [0] : [index];
+  }, [modules, activeModuleIndex]);
 
-    fetchModules();
-  }, [courseId, getAccessTokenSilently]);
-
-  if (loading) {
+  if (!modules.length) {
     return (
-      <Box w="300px" bg="gray.800" p={4} color="gray.300">
-        Loading modules...
+      <Box p={4} color={emptyTextColor} textAlign="center" fontSize="sm">
+        No modules available
       </Box>
     );
   }
 
   return (
     <Box
-      w="300px"
-      bg="gray.800"
-      borderRight="1px solid"
-      borderColor="gray.700"
-      color="gray.200"
+      bg={sidebarBg}
+      height="100%"
       overflowY="auto"
+      borderColor={useColorModeValue("gray.200", "gray.700")}
     >
-      <Accordion
-        allowMultiple
-        defaultIndex={moduleIndex ? [parseInt(moduleIndex)] : []}
-      >
-        {modules.map((module, mIdx) => (
-          <AccordionItem key={mIdx} border="none">
+      <Accordion allowMultiple defaultIndex={defaultIndex}>
+        {modules.map((module, mIndex) => (
+          <AccordionItem key={mIndex} border="none">
             <h2>
-              <AccordionButton
-                _expanded={{ bg: "gray.700", color: "white" }}
-                _hover={{ bg: "gray.700" }}
-              >
-                <Box flex="1" textAlign="left" fontWeight="semibold">
-                  {module.title}
+              <AccordionButton px={3} py={2} _hover={{ bg: hoverBg }}>
+                <Box
+                  flex="1"
+                  textAlign="left"
+                  fontWeight="semibold"
+                  color={moduleTitleColor}
+                  fontSize="sm"
+                  isTruncated
+                >
+                  {module.title || `Module ${mIndex + 1}`}
                 </Box>
                 <AccordionIcon />
               </AccordionButton>
             </h2>
-            <AccordionPanel p={0}>
-              <VStack align="stretch" spacing={0}>
-                {module.lessons.map((lesson, lIdx) => {
+            <AccordionPanel pb={2} px={0}>
+              <VStack align="stretch" spacing={1}>
+                {module.lessons.map((lesson, lIndex) => {
                   const isActive =
-                    parseInt(moduleIndex) === mIdx &&
-                    parseInt(lessonIndex) === lIdx;
+                    parseInt(activeModuleIndex, 10) === mIndex &&
+                    parseInt(activeLessonIndex, 10) === lIndex;
 
                   return (
-                    <Box
-                      key={lIdx}
-                      px={4}
-                      py={2}
-                      bg={isActive ? "purple.600" : "transparent"}
-                      _hover={{
-                        bg: isActive ? "purple.700" : "gray.700",
-                        cursor: "pointer",
-                      }}
+                    <Button
+                      key={lIndex}
+                      justifyContent="flex-start"
+                      variant="ghost"
+                      size="sm"
+                      fontWeight={isActive ? "bold" : "normal"}
+                      bg={isActive ? activeBg : "transparent"}
+                      color={isActive ? activeColor : lessonTextColor}
+                      _hover={{ bg: hoverBg }}
                       onClick={() =>
                         navigate(
-                          `/courses/${courseId}/module/${mIdx}/lesson/${lIdx}`
+                          `/courses/${courseId}/module/${mIndex}/lesson/${lIndex}`
                         )
                       }
+                      aria-current={isActive ? "page" : undefined}
+                      isTruncated
                     >
-                      <Text fontSize="sm" noOfLines={1}>
-                        {lesson.title}
-                      </Text>
-                    </Box>
+                      {lesson.title || `Lesson ${lIndex + 1}`}
+                    </Button>
                   );
                 })}
               </VStack>

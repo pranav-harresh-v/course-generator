@@ -1,16 +1,10 @@
-import { Heading } from "@chakra-ui/react";
+import { Heading, useColorModeValue } from "@chakra-ui/react";
 
 export default function HeadingBlock({ text }) {
+  const headingColor = useColorModeValue("gray.800", "gray.100");
+
   return (
-    <Heading
-      size="lg"
-      mt={6}
-      mb={3}
-      color="purple.300"
-      borderBottom="1px solid"
-      borderColor="gray.700"
-      pb={1}
-    >
+    <Heading size="md" mt={4} mb={2} color={headingColor}>
       {text}
     </Heading>
   );

@@ -1,85 +1,125 @@
 import { useState } from "react";
-import { Box, Text, VStack, Button } from "@chakra-ui/react";
+import {
+  Box,
+  Text,
+  VStack,
+  Button,
+  Flex,
+  useColorModeValue,
+  Divider,
+  Icon,
+} from "@chakra-ui/react";
+import { CheckCircleIcon } from "@chakra-ui/icons";
 
-export default function MCQBlock({ question, options, answer }) {
+export default function MCQBlock({
+  question,
+  options = [],
+  answer,
+  explanation,
+}) {
   const [selected, setSelected] = useState(null);
-  const [submitted, setSubmitted] = useState(false);
+  const [showAnswer, setShowAnswer] = useState(false);
 
-  const handleSelect = (index) => {
-    if (!submitted) setSelected(index);
-  };
+  // Theme-aware colors
+  const correctBg = useColorModeValue("green.100", "green.600");
+  const wrongBg = useColorModeValue("red.100", "red.600");
+  const neutralBg = useColorModeValue("gray.100", "gray.700");
+  const hoverBg = useColorModeValue("gray.200", "gray.600");
+  const explanationBg = useColorModeValue("gray.50", "gray.800");
+  const explanationBorder = useColorModeValue("blue.400", "blue.300");
 
-  const handleSubmit = () => {
-    if (selected !== null) setSubmitted(true);
+  const isCorrect = (opt) => opt === answer;
+
+  const handleReset = () => {
+    setSelected(null);
+    setShowAnswer(false);
   };
 
   return (
     <Box
+      borderWidth="1px"
+      borderRadius="md"
       p={4}
-      border="1px solid"
-      borderColor="gray.700"
-      bg="gray.800"
-      rounded="md"
-      my={4}
+      bg={useColorModeValue("white", "gray.900")}
+      boxShadow="sm"
     >
-      <Text fontWeight="bold" mb={3} color="purple.300">
+      {/* Question */}
+      <Text fontSize="lg" fontWeight="semibold" mb={4}>
         {question}
       </Text>
-      <VStack align="stretch" spacing={2}>
-        {options.map((opt, i) => {
-          const isCorrect = i === answer;
-          const isSelected = i === selected;
+
+      {/* Options */}
+      <VStack spacing={2} align="stretch">
+        {options.map((opt, idx) => {
+          let bgClr = neutralBg;
+          let borderClr = "transparent";
+
+          if (showAnswer) {
+            if (isCorrect(opt)) {
+              bgClr = correctBg;
+            } else if (selected === idx && !isCorrect(opt)) {
+              bgClr = wrongBg;
+            }
+          } else if (selected === idx) {
+            borderClr = useColorModeValue("blue.400", "blue.300");
+          }
 
           return (
             <Box
-              key={i}
-              p={2}
+              key={idx}
+              px={4}
+              py={2}
               borderRadius="md"
+              cursor={!showAnswer ? "pointer" : "default"}
+              bg={bgClr}
               border="1px solid"
-              borderColor={
-                submitted && isCorrect
-                  ? "green.400"
-                  : isSelected
-                  ? "purple.400"
-                  : "gray.600"
-              }
-              bg={
-                submitted && isCorrect
-                  ? "green.900"
-                  : isSelected
-                  ? "purple.900"
-                  : "transparent"
-              }
-              color={
-                submitted && isCorrect
-                  ? "green.200"
-                  : isSelected
-                  ? "purple.200"
-                  : "gray.200"
-              }
-              _hover={{ bg: submitted ? "" : "gray.700", cursor: "pointer" }}
-              onClick={() => handleSelect(i)}
+              borderColor={borderClr}
+              onClick={() => !showAnswer && setSelected(idx)}
+              transition="all 0.2s"
+              _hover={!showAnswer ? { bg: hoverBg } : {}}
             >
               {opt}
             </Box>
           );
         })}
       </VStack>
-      {!submitted && (
+
+      {/* Buttons */}
+      <Flex mt={4} gap={2}>
         <Button
-          mt={3}
           size="sm"
           colorScheme="purple"
-          isDisabled={selected === null}
-          onClick={handleSubmit}
+          onClick={() => setShowAnswer(true)}
+          isDisabled={showAnswer || selected === null}
         >
-          Submit
+          {showAnswer ? "Answer Shown" : "Show Answer"}
         </Button>
-      )}
-      {submitted && (
-        <Text mt={2} color={selected === answer ? "green.300" : "red.300"}>
-          {selected === answer ? "Correct! 🎉" : "Incorrect. Try again!"}
-        </Text>
+        {showAnswer && (
+          <Button size="sm" variant="outline" onClick={handleReset}>
+            Reset
+          </Button>
+        )}
+      </Flex>
+
+      {/* Explanation */}
+      {showAnswer && (
+        <Box
+          mt={4}
+          p={3}
+          borderWidth="1px"
+          borderRadius="md"
+          borderColor={explanationBorder}
+          bg={explanationBg}
+        >
+          <Flex align="center" mb={2}>
+            <Icon as={CheckCircleIcon} color={explanationBorder} mr={2} />
+            <Text fontWeight="bold" color={explanationBorder}>
+              Explanation:
+            </Text>
+          </Flex>
+          <Divider mb={2} />
+          <Text fontSize="sm">{explanation}</Text>
+        </Box>
       )}
     </Box>
   );

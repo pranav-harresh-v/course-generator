@@ -1,28 +1,25 @@
-import { Box } from "@chakra-ui/react";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { dracula } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { Box, Code, useColorModeValue } from "@chakra-ui/react";
 
-export default function CodeBlock({ language, text }) {
+export default function CodeBlock({ code = "", language = "javascript" }) {
+  const bg = useColorModeValue("gray.100", "gray.800");
+  const textColor = useColorModeValue("gray.800", "gray.100");
+  const borderColor = useColorModeValue("gray.300", "gray.600");
+
   return (
     <Box
-      my={4}
-      border="1px solid"
-      borderColor="gray.700"
+      bg={bg}
+      color={textColor}
+      p={4}
       borderRadius="md"
-      overflow="hidden"
+      overflowX="auto"
+      fontSize="sm"
+      fontFamily="mono"
+      border="1px solid"
+      borderColor={borderColor}
     >
-      <SyntaxHighlighter
-        language={language || "javascript"}
-        style={dracula}
-        showLineNumbers
-        customStyle={{
-          margin: 0,
-          padding: "1rem",
-          background: "#1a202c", // Chakra gray.900
-        }}
-      >
-        {text}
-      </SyntaxHighlighter>
+      <Code whiteSpace="pre" display="block">
+        {code}
+      </Code>
     </Box>
   );
 }

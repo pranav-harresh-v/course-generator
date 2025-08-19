@@ -1,109 +1,153 @@
-import { useParams } from "react-router-dom";
-import { useAuth0 } from "@auth0/auth0-react";
-import { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Heading,
-  Spinner,
-  Text,
-  VStack,
-  Alert,
-  AlertIcon,
-  Divider,
+  Flex,
+  Button,
+  useToast,
+  useColorModeValue,
+  Skeleton,
 } from "@chakra-ui/react";
+import { useParams, useNavigate, useOutletContext } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
 import LessonRenderer from "../components/LessonRenderer";
+import { getLesson } from "../utils/api";
+import { downloadLessonAsPDF } from "../utils/pdfExporter";
 
 export default function LessonViewer() {
   const { courseId, moduleIndex, lessonIndex } = useParams();
   const { getAccessTokenSilently } = useAuth0();
+  const toast = useToast();
+  const navigate = useNavigate();
+  const { modules } = useOutletContext();
+
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
-  // Use your API base from env
-  const API_URL = import.meta.env.VITE_API_URL;
+  const m = parseInt(moduleIndex, 10);
+  const l = parseInt(lessonIndex, 10);
+
+  const cardBg = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
 
   useEffect(() => {
     const fetchLesson = async () => {
       try {
         setLoading(true);
-        setError(null);
-
-        const token = await getAccessTokenSilently();
-        const res = await axios.get(
-          `${API_URL}/api/courses/${courseId}/module/${moduleIndex}/lesson/${lessonIndex}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        setLesson(res.data.data);
+        const data = await getLesson(getAccessTokenSilently, courseId, m, l);
+        setLesson(data || null);
       } catch (err) {
-        console.error("Error fetching lesson:", err);
-        setError("Failed to load lesson.");
+        toast({
+          title: "Error loading lesson",
+          description: err?.response?.data?.message || err.message,
+          status: "error",
+        });
       } finally {
         setLoading(false);
       }
     };
-
     fetchLesson();
-  }, [courseId, moduleIndex, lessonIndex, getAccessTokenSilently, API_URL]);
+  }, [courseId, m, l, getAccessTokenSilently, toast]);
 
-  // Loading state
-  if (loading) {
-    return (
-      <Box py={10} textAlign="center">
-        <Spinner size="xl" color="purple.400" />
-        <Text mt={2} color="gray.400">
-          Loading lesson...
-        </Text>
-      </Box>
-    );
-  }
+  // Smooth scroll to top when lesson changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [courseId, m, l]);
 
-  // Error state
-  if (error) {
-    return (
-      <Alert status="error" bg="red.900" borderColor="red.700">
-        <AlertIcon />
-        {error}
-      </Alert>
-    );
-  }
+  const handlePrev = () => {
+    if (l > 0) {
+      navigate(`/courses/${courseId}/module/${m}/lesson/${l - 1}`);
+    } else if (m > 0) {
+      const prevModule = modules[m - 1];
+      navigate(
+        `/courses/${courseId}/module/${m - 1}/lesson/${
+          prevModule.lessons.length - 1
+        }`
+      );
+    }
+  };
 
-  // Empty state
-  if (!lesson) {
-    return (
-      <Text color="gray.400" textAlign="center" mt={4}>
-        No lesson found.
-      </Text>
-    );
-  }
+  const handleNext = () => {
+    const currentModule = modules[m];
+    if (l < currentModule.lessons.length - 1) {
+      navigate(`/courses/${courseId}/module/${m}/lesson/${l + 1}`);
+    } else if (m < modules.length - 1) {
+      navigate(`/courses/${courseId}/module/${m + 1}/lesson/0`);
+    }
+  };
 
-  // Lesson view
+  const isFirstLesson = m === 0 && l === 0;
+  const isLastLesson =
+    m === modules.length - 1 &&
+    l === (modules[modules.length - 1]?.lessons.length || 1) - 1;
+
   return (
-    <VStack align="stretch" spacing={6}>
-      <Box>
-        <Heading size="lg" color="white">
-          {lesson.title}
-        </Heading>
-        {lesson.objectives && lesson.objectives.length > 0 && (
-          <Box mt={3}>
-            <Heading size="sm" color="purple.300" mb={2}>
-              Objectives
-            </Heading>
-            {lesson.objectives.map((obj, i) => (
-              <Text key={i} color="gray.200">
-                • {obj}
-              </Text>
-            ))}
+    <Flex direction="column" height="100%">
+      <Box
+        flex="1"
+        overflowY="auto"
+        p={4}
+        bg={cardBg}
+        borderRadius="md"
+        boxShadow="sm"
+      >
+        {loading ? (
+          <Box>
+            <Skeleton height="28px" width="60%" mb={4} />
+            <Skeleton height="16px" mb={2} />
+            <Skeleton height="16px" mb={2} />
+            <Skeleton height="16px" width="80%" />
           </Box>
+        ) : lesson ? (
+          <>
+            <Heading size="lg" mb={4} aria-live="polite">
+              {lesson.title}
+            </Heading>
+            <LessonRenderer content={lesson.content || []} />
+          </>
+        ) : (
+          <Heading size="md">Lesson not found.</Heading>
         )}
-        <Divider borderColor="gray.700" my={4} />
       </Box>
 
-      <LessonRenderer content={lesson.content} />
-    </VStack>
+      <Flex
+        mt={4}
+        p={3}
+        borderTop="1px solid"
+        borderColor={borderColor}
+        bg={cardBg}
+        justify="space-between"
+        align="center"
+        boxShadow="sm"
+      >
+        <Flex gap={2}>
+          <Button
+            variant="outline"
+            onClick={handlePrev}
+            isDisabled={isFirstLesson}
+            aria-label="Go to previous lesson"
+          >
+            Previous
+          </Button>
+          <Button
+            colorScheme="purple"
+            onClick={handleNext}
+            isDisabled={isLastLesson}
+            aria-label="Go to next lesson"
+          >
+            Next
+          </Button>
+        </Flex>
+        <Flex gap={2}>
+          <Button
+            variant="ghost"
+            onClick={() => downloadLessonAsPDF(lesson, lesson.title)}
+          >
+            Download PDF
+          </Button>
+          <Button variant="ghost">Explain Lesson</Button>
+        </Flex>
+      </Flex>
+    </Flex>
   );
 }
