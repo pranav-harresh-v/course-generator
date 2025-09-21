@@ -94,7 +94,7 @@ Rules:
 const callAI = async (prompt) => {
   try {
     const completion = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile", // ✅ updated model
+      model: "llama-3.3-70b-versatile",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
     });

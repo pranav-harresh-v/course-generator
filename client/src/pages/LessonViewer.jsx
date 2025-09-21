@@ -12,9 +12,11 @@ import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 import LessonRenderer from "../components/LessonRenderer";
 import { getLesson } from "../utils/api";
+import { getLessonTTS } from "../utils/api";
 import { downloadLessonAsPDF } from "../utils/pdfExporter";
 
 export default function LessonViewer() {
+  const [audioUrl, setAudioUrl] = useState(null);
   const { courseId, moduleIndex, lessonIndex } = useParams();
   const { getAccessTokenSilently } = useAuth0();
   const toast = useToast();
@@ -73,6 +75,19 @@ export default function LessonViewer() {
       navigate(`/courses/${courseId}/module/${m}/lesson/${l + 1}`);
     } else if (m < modules.length - 1) {
       navigate(`/courses/${courseId}/module/${m + 1}/lesson/0`);
+    }
+  };
+
+  const handleExplain = async () => {
+    try {
+      const url = await getLessonTTS(getAccessTokenSilently, lesson._id);
+      setAudioUrl(url);
+    } catch (err) {
+      toast({
+        title: "Error generating explanation",
+        description: err.message,
+        status: "error",
+      });
     }
   };
 
@@ -145,9 +160,17 @@ export default function LessonViewer() {
           >
             Download PDF
           </Button>
-          <Button variant="ghost">Explain Lesson</Button>
+          <Button variant="ghost" onClick={handleExplain}>
+            Explain Lesson
+          </Button>
         </Flex>
       </Flex>
+      {/* Hidden audio player (appears when audio is ready) */}
+      {audioUrl && (
+        <Box mt={2} px={4}>
+          <audio controls src={audioUrl} style={{ width: "100%" }} />
+        </Box>
+      )}
     </Flex>
   );
 }

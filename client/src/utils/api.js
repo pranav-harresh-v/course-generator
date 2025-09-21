@@ -65,3 +65,23 @@ export async function searchYouTube(getAccessTokenSilently, query) {
   // Your backend returns { success, videos: {...} }
   return res?.data?.videos ?? null;
 }
+
+/* ---------------- Lesson TTS ---------------- */
+export async function getLessonTTS(getAccessTokenSilently, lessonId) {
+  const token = await getAccessTokenSilently();
+  const res = await fetch(
+    `${import.meta.env.VITE_API_URL}/api/tts/${lessonId}`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to generate TTS");
+  }
+
+  // Response is audio/wav
+  const blob = await res.blob();
+  return URL.createObjectURL(blob); // frontend can play this directly
+}
