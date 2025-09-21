@@ -9,6 +9,7 @@ const errorMiddleware = require("./middlewares/errorMiddleware");
 
 // Routes
 const courseRoutes = require("./routes/courseRoutes");
+const youtubeRoutes = require("./routes/youtubeRoutes");
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.get("/", (req, res) => {
 
 // API routes
 app.use("/api/courses", courseRoutes);
+app.use("/api/youtube", youtubeRoutes);
 
 // Error handler
 app.use(errorMiddleware);

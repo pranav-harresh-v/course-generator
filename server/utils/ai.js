@@ -16,16 +16,16 @@ Output ONLY valid JSON in this format:
     {
       "title": "Descriptive and engaging module title (specific, not generic)",
       "lessons": [
-        "Lesson 1 — descriptive and clear",
-        "Lesson 2 — descriptive and clear",
-        "Lesson 3 — descriptive and clear"
+        "descriptive and clear",
+        "descriptive and clear",
+        "descriptive and clear"
       ]
     }
   ]
 }
 
 Rules:
-- 5–8 modules total
+- 5–8 modules total with 3-5 lessons each
 - Each module title must be specific and directly related to the topic, not just "Introduction" or "Basics"
 - Each lesson title must start with a capital letter and clearly indicate what will be learned
 - No repetition between module titles
