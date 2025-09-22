@@ -1,7 +1,16 @@
 const textToSpeech = require("@google-cloud/text-to-speech");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-const client = new textToSpeech.TextToSpeechClient();
+let client;
+if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+  const credentials = JSON.parse(
+    process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON
+  );
+  client = new textToSpeech.TextToSpeechClient({ credentials });
+} else {
+  client = new textToSpeech.TextToSpeechClient();
+}
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // Translate English → Hinglish using Gemini
