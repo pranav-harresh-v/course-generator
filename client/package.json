@@ -7,8 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "preinstall": "npm install --no-optional"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.4.0",
