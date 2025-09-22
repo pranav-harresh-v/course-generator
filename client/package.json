@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "preinstall": "npm install --no-optional"
+    "preinstall": "npm config set optional false"
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.4.0",
