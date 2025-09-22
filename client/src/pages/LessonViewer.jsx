@@ -7,6 +7,7 @@ import {
   useToast,
   useColorModeValue,
   Skeleton,
+  Spinner,
 } from "@chakra-ui/react";
 import { useParams, useNavigate, useOutletContext } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
@@ -25,7 +26,7 @@ export default function LessonViewer() {
 
   const [lesson, setLesson] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  const [audioLoading, setAudoLoading] = useState(false);
   const m = parseInt(moduleIndex, 10);
   const l = parseInt(lessonIndex, 10);
 
@@ -51,8 +52,9 @@ export default function LessonViewer() {
     fetchLesson();
   }, [courseId, m, l, getAccessTokenSilently, toast]);
 
-  // Smooth scroll to top when lesson changes
+  // Smooth scroll to top when lesson changes and reset audio
   useEffect(() => {
+    setAudioUrl(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [courseId, m, l]);
 
@@ -80,6 +82,7 @@ export default function LessonViewer() {
 
   const handleExplain = async () => {
     try {
+      setAudoLoading(true);
       const url = await getLessonTTS(getAccessTokenSilently, lesson._id);
       setAudioUrl(url);
     } catch (err) {
@@ -88,6 +91,8 @@ export default function LessonViewer() {
         description: err.message,
         status: "error",
       });
+    } finally {
+      setAudoLoading(false);
     }
   };
 
@@ -160,8 +165,13 @@ export default function LessonViewer() {
           >
             Download PDF
           </Button>
-          <Button variant="ghost" onClick={handleExplain}>
-            Explain Lesson
+          <Button
+            variant="ghost"
+            onClick={handleExplain}
+            isDisabled={audioLoading}
+            leftIcon={audioLoading ? <Spinner size="sm" /> : null}
+          >
+            {audioLoading ? "Generating..." : "Explain Lesson"}
           </Button>
         </Flex>
       </Flex>

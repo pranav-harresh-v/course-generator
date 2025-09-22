@@ -32,13 +32,13 @@ export async function deleteCourse(getAccessTokenSilently, courseId) {
   await api.delete(`/api/courses/${courseId}`, { headers });
 }
 
-/* -------------- Single Course / Lesson -------------- */
-
 export async function getCourseById(getAccessTokenSilently, courseId) {
   const headers = await authHeader(getAccessTokenSilently);
   const res = await api.get(`/api/courses/${courseId}`, { headers });
   return res?.data?.data;
 }
+
+/* -------------- Lesson -------------- */
 
 export async function getLesson(
   getAccessTokenSilently,
@@ -68,20 +68,12 @@ export async function searchYouTube(getAccessTokenSilently, query) {
 
 /* ---------------- Lesson TTS ---------------- */
 export async function getLessonTTS(getAccessTokenSilently, lessonId) {
-  const token = await getAccessTokenSilently();
-  const res = await fetch(
-    `${import.meta.env.VITE_API_URL}/api/tts/${lessonId}`,
-    {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    }
-  );
+  const headers = await authHeader(getAccessTokenSilently);
+  const res = await api.post(`/api/tts/${lessonId}`, null, {
+    headers,
+    responseType: "blob", // ensure axios treats it as binary
+  });
 
-  if (!res.ok) {
-    throw new Error("Failed to generate TTS");
-  }
-
-  // Response is audio/wav
-  const blob = await res.blob();
+  const blob = res.data;
   return URL.createObjectURL(blob); // frontend can play this directly
 }

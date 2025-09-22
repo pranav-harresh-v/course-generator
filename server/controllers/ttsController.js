@@ -1,10 +1,27 @@
 const Lesson = require("../models/Lesson");
 const { translateToHinglish, textToSpeech } = require("../utils/tts");
 
+// Helper to split large text into ~4500 char chunks
+function chunkText(text, maxLen = 4500) {
+  const chunks = [];
+  let current = "";
+
+  for (const sentence of text.split(/(?<=[.?!])\s+/)) {
+    if ((current + sentence).length > maxLen) {
+      chunks.push(current.trim());
+      current = "";
+    }
+    current += sentence + " ";
+  }
+
+  if (current.trim()) chunks.push(current.trim());
+  return chunks;
+}
+
 exports.generateLessonTTS = async (req, res) => {
   try {
     const { lessonId } = req.params;
-    const userId = req.auth.sub; // Auth0 user ID from checkJwt
+    const userId = req.auth.sub; // Auth0 user ID
 
     // 1. Fetch lesson + module + course
     const lesson = await Lesson.findById(lessonId).populate({
@@ -19,20 +36,13 @@ exports.generateLessonTTS = async (req, res) => {
     }
 
     const course = lesson.module?.course;
-    if (!course) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Course not found" });
-    }
-
-    // 2. Ownership check
-    if (course.creator !== userId) {
+    if (!course || course.creator !== userId) {
       return res
         .status(403)
         .json({ success: false, message: "Forbidden: not your lesson" });
     }
 
-    // 3. Flatten lesson blocks into readable script
+    // 2. Flatten lesson blocks
     const script = lesson.content
       .map((block) => {
         switch (block.type) {
@@ -51,21 +61,28 @@ exports.generateLessonTTS = async (req, res) => {
     if (!script.trim()) {
       return res
         .status(400)
-        .json({ success: false, message: "Lesson has no content to explain" });
+        .json({ success: false, message: "Lesson has no content" });
     }
 
-    // 4. Translate to Hinglish
+    // 3. Translate
     const hinglishText = await translateToHinglish(script);
 
-    // 5. Generate TTS audio
-    const audioBuffer = await textToSpeech(hinglishText);
+    // 4. Split into safe chunks
+    const chunks = chunkText(hinglishText);
+
+    // 5. Generate audio for each chunk & merge
+    let finalBuffer = Buffer.alloc(0);
+    for (const chunk of chunks) {
+      const audioPart = await textToSpeech(chunk);
+      finalBuffer = Buffer.concat([finalBuffer, audioPart]);
+    }
 
     // 6. Send WAV audio response
     res.set({
       "Content-Type": "audio/wav",
       "Content-Disposition": `attachment; filename="lesson-${lessonId}.wav"`,
     });
-    return res.send(audioBuffer);
+    return res.send(finalBuffer);
   } catch (err) {
     console.error("[TTS error]", err);
     return res

@@ -101,11 +101,6 @@ const callAI = async (prompt) => {
 
     let raw = completion.choices[0]?.message?.content?.trim();
 
-    // Debug log
-    console.log("==== RAW AI OUTPUT START ====");
-    console.log(raw);
-    console.log("==== RAW AI OUTPUT END ====");
-
     // Clean markdown fences if present
     if (raw.startsWith("```")) {
       raw = raw.replace(/```json|```/gi, "").trim();

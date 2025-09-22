@@ -1,4 +1,3 @@
-// src/components/blocks/VideoBlock.jsx
 import { useEffect, useState } from "react";
 import {
   Box,
@@ -8,8 +7,8 @@ import {
   useToast,
   useColorModeValue,
 } from "@chakra-ui/react";
-import axios from "axios";
 import { useAuth0 } from "@auth0/auth0-react";
+import { searchYouTube } from "../../utils/api";
 
 export default function VideoBlock({ query }) {
   const { getAccessTokenSilently } = useAuth0();
@@ -17,7 +16,6 @@ export default function VideoBlock({ query }) {
   const [loading, setLoading] = useState(true);
   const toast = useToast();
 
-  const API_URL = import.meta.env.VITE_API_URL;
   const cardBg = useColorModeValue("white", "gray.800");
   const borderClr = useColorModeValue("gray.200", "gray.600");
 
@@ -27,14 +25,7 @@ export default function VideoBlock({ query }) {
     const fetchVideo = async () => {
       try {
         setLoading(true);
-        const token = await getAccessTokenSilently();
-        const res = await axios.get(`${API_URL}/api/youtube`, {
-          params: { q: query },
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const data = res.data?.videos || null;
-
+        const data = await searchYouTube(getAccessTokenSilently, query);
         if (isMounted) setVideo(data);
       } catch (err) {
         if (isMounted) {
@@ -54,7 +45,7 @@ export default function VideoBlock({ query }) {
     return () => {
       isMounted = false;
     };
-  }, [query, API_URL, getAccessTokenSilently, toast]);
+  }, [query, getAccessTokenSilently, toast]);
 
   if (loading) {
     return (

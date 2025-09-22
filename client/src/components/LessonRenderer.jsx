@@ -17,7 +17,7 @@ export default function LessonRenderer({ content = [] }) {
   return (
     <VStack align="stretch" spacing={4}>
       {content.map((block, idx) => {
-        const key = block._id || `${block.type}-${idx}`; // ✅ prefer backend _id
+        const key = block._id || `${block.type}-${idx}`;
 
         switch (block.type) {
           case "heading":
@@ -39,7 +39,7 @@ export default function LessonRenderer({ content = [] }) {
           default:
             return (
               <Text key={key} color="red.400" fontSize="sm">
-                ⚠ Unknown block type: {block.type}
+                Unknown block type: {block.type}
               </Text>
             );
         }
