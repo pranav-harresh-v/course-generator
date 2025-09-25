@@ -139,7 +139,7 @@ export default function LessonViewer() {
         justify="space-between"
         align="center"
         boxShadow="sm"
-        flexWrap="wrap" 
+        flexWrap="wrap"
       >
         <Flex gap={2}>
           <Button
@@ -164,7 +164,7 @@ export default function LessonViewer() {
             variant="ghost"
             onClick={() => downloadLessonAsPDF(lesson, lesson.title)}
           >
-            Download PDF
+            PDF
           </Button>
           <Button
             variant="ghost"
@@ -172,7 +172,7 @@ export default function LessonViewer() {
             isDisabled={audioLoading}
             leftIcon={audioLoading ? <Spinner size="sm" /> : null}
           >
-            {audioLoading ? "Generating..." : "Explain Lesson"}
+            {audioLoading ? null : "Explain"}
           </Button>
         </Flex>
       </Flex>

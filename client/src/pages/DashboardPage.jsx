@@ -192,7 +192,8 @@ export default function DashboardPage() {
               size="sm"
               position="absolute"
               right={{ base: 3, md: 4 }}
-              bottom={{ base: 2, md: 3 }}
+              top="50%"
+              transform="translateY(-50%)"
               borderRadius="full"
               bg={iconBg}
               _hover={{ bg: iconHover }}

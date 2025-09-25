@@ -61,7 +61,7 @@ export default function LandingPage() {
             rightIcon={<Box as="span">→</Box>}
             onClick={handleSignup}
           >
-            Sign Up Free
+            Sign Up
           </Button>
         </HStack>
       </Flex>
@@ -91,7 +91,7 @@ export default function LandingPage() {
         <FadeInUp delay={0.4}>
           <Text
             mt={4}
-            maxW={{ base: "90%", md: "lg" }}
+            maxW={{ base: "100%", md: "lg" }}
             fontSize="md"
             color="gray.200"
           >
