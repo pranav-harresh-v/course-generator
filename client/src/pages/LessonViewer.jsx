@@ -139,6 +139,7 @@ export default function LessonViewer() {
         justify="space-between"
         align="center"
         boxShadow="sm"
+        flexWrap="wrap" 
       >
         <Flex gap={2}>
           <Button
